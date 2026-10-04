@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>AutoPost AI</title>
+
+<style>
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:#0b1020;
+    color:white;
+}
+
+header{
+    padding:20px;
+    border-bottom:1px solid #26304a;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.logo{
+    font-size:23px;
+    font-weight:bold;
+}
+
+.badge{
+    background:#19233d;
+    padding:7px 12px;
+    border-radius:20px;
+    font-size:12px;
+}
+
+.container{
+    max-width:1100px;
+    margin:auto;
+    padding:20px;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:330px 1fr;
+    gap:20px;
+}
+
+.card{
+    background:#11182b;
+    border:1px solid #273451;
+    border-radius:16px;
+    padding:20px;
+    margin-bottom:20px;
+}
+
+h2,h3{
+    margin-top:0;
+}
+
+label{
+    display:block;
+    color:#9ca9c4;
+    font-size:13px;
+    margin:15px 0 7px;
+}
+
+input,select,textarea{
+    width:100%;
+    padding:13px;
+    border-radius:10px;
+    border:1px solid #34405e;
+    background:#0b1121;
+    color:white;
+    outline:none;
+}
+
+textarea{
+    min-height:130px;
+}
+
+button{
+    border:0;
+    border-radius:10px;
+    padding:12px 15px;
+    background:#6757ff;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+button:hover{
+    opacity:.85;
+}
+
+.secondary{
+    background:#25304a;
+}
+
+.full{
+    width:100%;
+    margin-top:15px;
+}
+
+.post{
+    border:1px solid #2b3957;
+    border-radius:14px;
+    padding:16px;
+    margin-top:12px;
+}
+
+.status{
+    float:right;
+    background:#263452;
+    padding:5px 9px;
+    border-radius:15px;
+    font-size:11px;
+}
+
+.meta{
+    color:#8997b3;
+    font-size:12px;
+    margin-bottom:10px;
+}
+
+.tags{
+    color:#8eafff;
+    margin-top:10px;
+}
+
+.row{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+}
+
+small{
+    color:#8290aa;
+}
+
+@media(max-width:750px){
+
+    .grid{
+        grid-template-columns:1fr;
+    }
+
+    .container{
+        padding:12px;
+    }
+
+}
+</style>
+</head>
+
+<body>
+
+<header>
+
+<div class="logo">
+🤖 AutoPost AI
+</div>
+
+<div class="badge">
+FREE MODE
+</div>
+
+</header>
+
+
+<div class="container">
+
+<div class="grid">
+
+
+<!-- LEFT SIDE -->
+
+<div>
+
+<div class="card">
+
+<h3>✨ Create Content</h3>
+
+<label>Niche</label>
+
+<input
+id="niche"
+placeholder="Example: Islamic, Poetry, Crypto, Tech"
+>
+
+
+<label>Topic</label>
+
+<input
+id="topic"
+placeholder="Leave empty and AI will choose"
+>
+
+
+<label>Platform</label>
+
+<select id="platform">
+
+<option>Instagram</option>
+<option>Facebook</option>
+<option>YouTube</option>
+<option>TikTok</option>
+<option>X</option>
+<option>Telegram</option>
+
+</select>
+
+
+<button
+class="full"
+onclick="generatePost()"
+>
+
+🤖 Generate Post
+
+</button>
+
+</div>
+
+
+
+<div class="card">
+
+<h3>📱 Social Accounts</h3>
+
+<div id="accounts">
+<small>No accounts connected.</small>
+</div>
+
+<br>
+
+<select id="accountPlatform">
+
+<option>Instagram</option>
+<option>Facebook</option>
+<option>YouTube</option>
+<option>TikTok</option>
+<option>X</option>
+<option>Telegram</option>
+
+</select>
+
+<br><br>
+
+<input
+id="accountName"
+placeholder="@username or channel name"
+>
+
+<button
+class="full secondary"
+onclick="addAccount()"
+>
+
+➕ Add Account
+
+</button>
+
+</div>
+
+</div>
+
+
+
+<!-- RIGHT SIDE -->
+
+<div class="card">
+
+<div class="row" style="justify-content:space-between">
+
+<h3>📋 Content Queue</h3>
+
+<button
+class="secondary"
+onclick="loadPosts()"
+>
+Refresh
+</button>
+
+</div>
+
+
+<div id="posts">
+
+<small>
+No posts yet. Create your first post.
+</small>
+
+</div>
+
+</div>
+
+
+</div>
+
+</div>
+
+
+
+<script>
+
+const POST_KEY = "autopost_posts";
+
+const ACCOUNT_KEY = "autopost_accounts";
+
+
+function getPosts(){
+
+    return JSON.parse(
+        localStorage.getItem(POST_KEY) || "[]"
+    );
+
+}
+
+
+function savePosts(posts){
+
+    localStorage.setItem(
+        POST_KEY,
+        JSON.stringify(posts)
+    );
+
+}
+
+
+function getAccounts(){
+
+    return JSON.parse(
+        localStorage.getItem(ACCOUNT_KEY) || "[]"
+    );
+
+}
+
+
+function saveAccounts(accounts){
+
+    localStorage.setItem(
+        ACCOUNT_KEY,
+        JSON.stringify(accounts)
+    );
+
+}
+
+
+function generatePost(){
+
+    const niche =
+        document.getElementById("niche").value.trim();
+
+    const topic =
+        document.getElementById("topic").value.trim();
+
+    const platform =
+        document.getElementById("platform").value;
+
+
+    if(!niche){
+
+        alert("Pehle apni niche likho.");
+
+        return;
+
+    }
+
+
+    let finalTopic = topic;
+
+
+    if(!finalTopic){
+
+        const topics = [
+
+            "5 important things everyone should know",
+
+            "A powerful thought for today",
+
+            "The biggest mistake people make",
+
+            "An idea that can change your perspective",
+
+            "A useful tip everyone should know"
+
+        ];
+
+        finalTopic =
+            topics[
+                Math.floor(
+                    Math.random()*topics.length
+                )
+            ];
+
+    }
+
+
+    const caption =
+
+`🔥 ${finalTopic}
+
+Aaj ka important thought:
+
+Har cheez jo humein pasand aaye,
+zaroori nahi ke woh hamari ho.
+
+Apni value samjho,
+apna waqt bachao,
+aur apni journey par focus rakho.
+
+💭 What do you think?
+
+Follow for more content.`;
+
+
+    const hashtags =
+
+`#${niche.replace(/\s+/g,"")}
+#viral
+#trending
+#content
+#reels
+#shorts`;
+
+
+    const post = {
+
+        id:Date.now(),
+
+        niche:niche,
+
+        topic:finalTopic,
+
+        platform:platform,
+
+        caption:caption,
+
+        hashtags:hashtags,
+
+        status:"draft",
+
+        created:new Date().toISOString(),
+
+        scheduled:null
+
+    };
+
+
+    const posts = getPosts();
+
+    posts.unshift(post);
+
+    savePosts(posts);
+
+    loadPosts();
+
+
+    alert(
+        "Post create ho gayi! 🎉\n\n" +
+        "Ye abhi FREE demo mode hai."
+    );
+
+}
+
+
+function loadPosts(){
+
+    const posts = getPosts();
+
+    const container =
+        document.getElementById("posts");
+
+
+    if(posts.length === 0){
+
+        container.innerHTML =
+        "<small>No posts yet. Create your first post.</small>";
+
+        return;
+
+    }
+
+
+    container.innerHTML = posts.map(post => `
+
+        <div class="post">
+
+            <span class="status">
+                ${post.status}
+            </span>
+
+            <div class="meta">
+
+                ${post.platform}
+                •
+                ${new Date(post.created).toLocaleString()}
+
+            </div>
+
+
+            <h3>
+                ${escapeHTML(post.topic)}
+            </h3>
+
+
+            <p>
+                ${escapeHTML(post.caption)
+                    .replace(/\n/g,"<br>")}
+            </p>
+
+
+            <div class="tags">
+
+                ${escapeHTML(post.hashtags)
+                    .replace(/\n/g," ")}
+
+            </div>
+
+
+            <br>
+
+
+            <div class="row">
+
+                <button
+                onclick="schedulePost(${post.id})"
+                >
+
+                📅 Schedule
+
+                </button>
+
+
+                <button
+                class="secondary"
+                onclick="publishPost(${post.id})"
+                >
+
+                🚀 Publish
+
+                </button>
+
+            </div>
+
+        </div>
+
+    `).join("");
+
+}
+
+
+function schedulePost(id){
+
+    const date =
+        prompt(
+            "Date/time likho:\nExample: 2026-10-05 20:00"
+        );
+
+
+    if(!date) return;
+
+
+    const posts = getPosts();
+
+    const post =
+        posts.find(p => p.id === id);
+
+
+    if(post){
+
+        post.status="scheduled";
+
+        post.scheduled=date;
+
+        savePosts(posts);
+
+        loadPosts();
+
+    }
+
+}
+
+
+function publishPost(id){
+
+    alert(
+
+`🚀 Publishing system
+
+Abhi demo mode active hai.
+
+Real automatic publishing ke liye:
+Facebook
+Instagram
+TikTok
+YouTube
+X
+
+ki official API/OAuth connection add karni hogi.`
+
+    );
+
+}
+
+
+function addAccount(){
+
+    const platform =
+        document.getElementById(
+            "accountPlatform"
+        ).value;
+
+
+    const name =
+        document.getElementById(
+            "accountName"
+        ).value.trim();
+
+
+    if(!name){
+
+        alert("Account name likho.");
+
+        return;
+
+    }
+
+
+    const accounts =
+        getAccounts();
+
+
+    accounts.push({
+
+        platform:platform,
+
+        name:name,
+
+        status:"not connected"
+
+    });
+
+
+    saveAccounts(accounts);
+
+
+    document.getElementById(
+        "accountName"
+    ).value="";
+
+
+    loadAccounts();
+
+}
+
+
+function loadAccounts(){
+
+    const accounts =
+        getAccounts();
+
+
+    const container =
+        document.getElementById(
+            "accounts"
+        );
+
+
+    if(accounts.length===0){
+
+        container.innerHTML =
+        "<small>No accounts connected.</small>";
+
+        return;
+
+    }
+
+
+    container.innerHTML =
+        accounts.map(account => `
+
+        <p>
+
+        🔗 <b>${escapeHTML(account.platform)}</b>
+
+        —
+
+        ${escapeHTML(account.name)}
+
+        <small>
+        (${account.status})
+        </small>
+
+        </p>
+
+    `).join("");
+
+}
+
+
+function escapeHTML(text){
+
+    return String(text)
+
+        .replace(/&/g,"&amp;")
+
+        .replace(/</g,"&lt;")
+
+        .replace(/>/g,"&gt;")
+
+        .replace(/"/g,"&quot;")
+
+        .replace(/'/g,"&#039;");
+
+}
+
+
+loadPosts();
+
+loadAccounts();
+
+</script>
+
+</body>
+  </html>
